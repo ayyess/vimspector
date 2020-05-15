@@ -45,3 +45,49 @@ function! Test_Python_Simple()
   %bwipeout!
 endfunction
 
+function! SetUp_Test_Python_Remote_Attach()
+  let g:vimspector_enable_mappings = 'HUMAN'
+endfunction
+
+function! Test_Python_Remote_Attach()
+  lcd ../support/test/python/simple_python
+  let fn='main.py'
+  exe 'edit ' . fn
+
+  let jobid = job_start( [ './run_with_debugpy' ] )
+
+  call setpos( '.', [ 0, 6, 1 ] )
+
+  call vimspector#test#signs#AssertCursorIsAtLineInBuffer( fn, 6, 1 )
+  call vimspector#test#signs#AssertSignGroupEmptyAtLine( 'VimspectorBP', 6 )
+
+  " Add the breakpoint
+  call feedkeys( "\<F9>", 'xt' )
+  call vimspector#test#signs#AssertSignGroupSingletonAtLine( 'VimspectorBP',
+                                                           \ 6,
+                                                           \ 'vimspectorBP' )
+
+  call setpos( '.', [ 0, 1, 1 ] )
+
+  " Here we go. Start Debugging (note will wait up to 10s for the script to do
+  " its virtualenv thing)
+  call vimspector#LaunchWithSettings( {
+        \   'configuration': 'attach',
+        \   'port': 5678,
+        \   'host': 'localhost'
+        \ } )
+  call vimspector#test#signs#AssertCursorIsAtLineInBuffer( fn, 6, 1 )
+
+  " Step
+  call feedkeys( "\<F10>", 'xt' )
+
+  call vimspector#test#signs#AssertCursorIsAtLineInBuffer( fn, 7, 1 )
+  call WaitForAssert( {->
+        \ vimspector#test#signs#AssertPCIsAtLineInBuffer( fn, 7 )
+        \ } )
+
+  call vimspector#test#setup#Reset()
+  call job_stop( jobid )
+  lcd -
+  %bwipeout!
+endfunction

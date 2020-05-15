@@ -14,6 +14,6 @@ pushd $(dirname $0)
   . env/bin/activate
   pip install -r requirements.txt
 
-  python -m ptvsd --wait --host localhost --port 5678 main.py
+  python -m debugpy --wait-for-client --listen 0.0.0.0:5678 main.py
 popd
 
