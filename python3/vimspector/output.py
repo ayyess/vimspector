@@ -112,10 +112,16 @@ class OutputView( object ):
     self._ToggleFlag( category, False )
     self._ShowOutput( category )
 
-  def Evaluate( self, frame, expression ):
+  def Evaluate( self, frame, expression, return_to_insert=False ):
     console = self._buffers[ 'Console' ].buf
     with utils.ModifiableScratchBuffer( console ):
       utils.AppendToBuffer( console, 'Evaluating: ' + expression )
+
+    def tidy_up( reason, msg ):
+      if return_to_insert:
+        vim.command('call feedkeys("A", "n")')
+      else:
+        vim.command('call feedkeys("G", "n")')
 
     def print_result( message ):
       with utils.ModifiableScratchBuffer( console ):
@@ -127,6 +133,8 @@ class OutputView( object ):
           result = 'null'
 
         utils.AppendToBuffer( console, '  Result: ' + result )
+        
+        tidy_up(None, message)
 
     request = {
       'command': 'evaluate',
@@ -139,7 +147,7 @@ class OutputView( object ):
     if frame:
       request[ 'arguments' ][ 'frameId' ] = frame[ 'id' ]
 
-    self._connection.DoRequest( print_result, request )
+    self._connection.DoRequest( print_result, request, tidy_up )
 
   def _ToggleFlag( self, category, flag ):
     if self._buffers[ category ].flag != flag:

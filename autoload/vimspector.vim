@@ -125,7 +125,7 @@ endfunction
 function! vimspector#EvaluateConsole( expr ) abort
   stopinsert
   setlocal nomodified
-  py3 _vimspector_session.EvaluateConsole( vim.eval( 'a:expr' ) )
+  py3 _vimspector_session.EvaluateConsole( vim.eval( 'a:expr' ), 1 )
 endfunction
 
 function! vimspector#ShowOutput( category ) abort
