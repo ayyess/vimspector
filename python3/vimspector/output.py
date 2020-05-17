@@ -119,7 +119,8 @@ class OutputView( object ):
 
     def tidy_up( reason, msg ):
       if return_to_insert:
-        vim.command('call feedkeys("A", "n")')
+        # A and I for some reason disable left and right arrows.
+        vim.command('call feedkeys("G$a", "n")')
       else:
         vim.command('call feedkeys("G", "n")')
 
